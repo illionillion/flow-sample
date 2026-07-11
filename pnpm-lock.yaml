@@ -1,0 +1,24 @@
+lockfileVersion: '9.0'
+
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
+importers:
+
+  .:
+    devDependencies:
+      flow-bin:
+        specifier: ^0.322.0
+        version: 0.322.0
+
+packages:
+
+  flow-bin@0.322.0:
+    resolution: {integrity: sha512-epxfCrmoA2LXi9NjrTT9GbDXuLxDlMDfHsrFKbHuM5Aug7HTe33/8yvurHK+m4CPzCesRF6ycGx3R2xJl0YMAA==}
+    engines: {node: '>=0.10.0'}
+    hasBin: true
+
+snapshots:
+
+  flow-bin@0.322.0: {}
