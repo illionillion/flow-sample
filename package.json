@@ -5,10 +5,10 @@
   "main": "dist/index.js",
   "scripts": {
     "postinstall": "flow-typed install --skip",
+    "dev": "pnpm build && concurrently -k \"nodemon --watch src --ext js,html,css --exec 'pnpm run build'\" \"live-server dist --port=3000\"",
     "flow": "flow",
     "check": "flow check",
     "build": "babel src --out-dir dist && postcss src/css/input.css -o dist/css/style.css && cp src/index.html dist/index.html",
-    "dev": "pnpm build && concurrently -k \"nodemon --watch src --ext js,html,css --exec 'pnpm run build'\" \"live-server dist --port=3000\"",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],

@@ -1,5 +1,7 @@
 /* @flow */
 
+import { confirm } from './confirm.js';
+
 let todos: string[] = [];
 
 const appendTodoItem = (
@@ -34,6 +36,8 @@ window.addEventListener('load', () => {
     const clear = document.getElementById('clear');
     const count = document.getElementById('count');
     const template = document.getElementById('todo-item-template');
+    const confirmDialog = document.getElementById('confirm-dialog');
+    const confirmMessage = document.getElementById('confirm-message');
 
     if (!(app instanceof HTMLFormElement)) return;
     if (!(input instanceof HTMLInputElement)) return;
@@ -41,6 +45,8 @@ window.addEventListener('load', () => {
     if (!(clear instanceof HTMLButtonElement)) return;
     if (!(count instanceof HTMLParagraphElement)) return;
     if (!(template instanceof HTMLTemplateElement)) return;
+    if (!(confirmDialog instanceof HTMLDialogElement)) return;
+    if (!(confirmMessage instanceof HTMLParagraphElement)) return;
 
     const handleAdd = (e: Event) => {
         e.preventDefault();
@@ -53,7 +59,14 @@ window.addEventListener('load', () => {
         input.focus();
     };
 
-    const handleClear = () => {
+    const handleClear = async () => {
+        const ok = await confirm(
+            confirmDialog,
+            confirmMessage,
+            'すべての todo を削除しますか？'
+        );
+        if (!ok) return;
+
         todos.length = 0;
         renderList(list, count, template);
         input.value = '';
