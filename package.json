@@ -2,11 +2,13 @@
   "name": "flow-sample",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "dist/index.js",
   "scripts": {
+    "postinstall": "flow-typed install --skip",
     "flow": "flow",
     "check": "flow check",
-    "build": "babel index.js --out-dir dist",
+    "build": "babel src --out-dir dist && cp src/index.html dist/index.html",
+    "dev": "pnpm build && concurrently -k \"nodemon --watch src --ext js,html --exec 'pnpm run build'\" \"live-server dist --port=3000\"",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -17,6 +19,10 @@
     "@babel/cli": "^8.0.4",
     "@babel/core": "^8.0.1",
     "@babel/preset-flow": "^8.0.1",
-    "flow-bin": "^0.322.0"
+    "concurrently": "^10.0.3",
+    "flow-bin": "^0.322.0",
+    "flow-typed": "^4.1.1",
+    "live-server": "^1.2.2",
+    "nodemon": "^3.1.14"
   }
 }

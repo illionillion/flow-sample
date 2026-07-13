@@ -1,3 +1,5 @@
 .DS_Store
 node_modules
 dist
+flow-typed/npm
+flow-typed/environments
