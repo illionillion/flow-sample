@@ -6,6 +6,7 @@
   "scripts": {
     "flow": "flow",
     "check": "flow check",
+    "build": "babel index.js --out-dir dist",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -13,6 +14,9 @@
   "license": "ISC",
   "type": "commonjs",
   "devDependencies": {
+    "@babel/cli": "^8.0.4",
+    "@babel/core": "^8.0.1",
+    "@babel/preset-flow": "^8.0.1",
     "flow-bin": "^0.322.0"
   }
 }
