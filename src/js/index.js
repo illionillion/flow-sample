@@ -60,6 +60,8 @@ window.addEventListener('load', () => {
     };
 
     const handleClear = async () => {
+        if (!todos.length) return;
+        
         const ok = await confirm(
             confirmDialog,
             confirmMessage,
