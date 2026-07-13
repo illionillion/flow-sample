@@ -1,18 +1,59 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ja">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>todo app</title>
+    <title>Todo App</title>
+    <link rel="stylesheet" href="./css/style.css">
     <script type="module" src="./js/index.js"></script>
 </head>
-<body>
-    <form id="app">
-        <h1>Todo App</h1>
-        <input type="text" id="input" placeholder="Add a new todo">
-        <button type="submit" id="add">Add</button>
-        <button type="button" id="clear">Clear</button>
-        <ul id="list"></ul>
-    </form>
+<body class="min-h-screen bg-slate-100 text-slate-900 antialiased">
+    <main class="mx-auto max-w-lg px-4 py-10">
+        <form id="app" class="flex max-h-[calc(100dvh-5rem)] flex-col rounded-2xl bg-white p-6 shadow-lg ring-1 ring-slate-200">
+            <header class="mb-6">
+                <p class="text-sm font-medium uppercase tracking-wide text-indigo-600">Flow Sample</p>
+                <h1 class="mt-1 text-3xl font-bold text-slate-900">Todo App</h1>
+                <p class="mt-2 text-sm text-slate-500">Tailwind をビルドして dist に含めています。</p>
+            </header>
+
+            <div class="flex gap-2">
+                <input
+                    type="text"
+                    id="input"
+                    placeholder="やることを入力"
+                    class="min-w-0 flex-1 rounded-xl border border-slate-300 px-4 py-2.5 text-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                >
+                <button
+                    type="submit"
+                    id="add"
+                    class="rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-300"
+                >
+                    追加
+                </button>
+            </div>
+
+            <div class="mt-4 flex items-center justify-between">
+                <p id="count" class="text-sm text-slate-500">0 件</p>
+                <button
+                    type="button"
+                    id="clear"
+                    class="rounded-lg border border-rose-200 bg-rose-50 px-3 py-1.5 text-sm font-medium text-rose-700 transition hover:bg-rose-100 hover:text-rose-800"
+                >
+                    すべて削除
+                </button>
+            </div>
+
+            <div id="list-scroll" class="mt-4 min-h-0 flex-1 overflow-y-auto pr-1">
+                <ul id="list" class="space-y-2"></ul>
+            </div>
+        </form>
+    </main>
+
+    <template id="todo-item-template">
+        <li class="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
+            <span class="h-2 w-2 shrink-0 rounded-full bg-indigo-500"></span>
+            <span class="flex-1" data-todo-text></span>
+        </li>
+    </template>
 </body>
 </html>
