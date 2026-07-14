@@ -1,32 +1,54 @@
 /* @flow */
 
 import { confirm } from './confirm.js';
+import { createTodo } from './types.js';
+import type { Todo, TodoId } from './types.js';
 
-let todos: string[] = [];
+let todos: Array<Todo> = [];
 
 const appendTodoItem = (
     list: HTMLUListElement,
     template: HTMLTemplateElement,
-    todo: string
+    todo: Todo,
+    onToggle: (id: TodoId, checked: boolean) => void
 ) => {
     const fragment = template.content.cloneNode(true);
     if (!(fragment instanceof DocumentFragment)) return;
 
+    const item = fragment.querySelector('[data-todo-item]');
     const textEl = fragment.querySelector('[data-todo-text]');
-    if (!(textEl instanceof HTMLSpanElement)) return;
+    const checkEl = fragment.querySelector('[data-todo-check]');
 
-    textEl.textContent = todo;
+    if (!(item instanceof HTMLLIElement)) return;
+    if (!(textEl instanceof HTMLSpanElement)) return;
+    if (!(checkEl instanceof HTMLInputElement)) return;
+
+    item.dataset.todoId = todo.id;
+    textEl.textContent = todo.name;
+    checkEl.checked = todo.checked;
+
+    if (todo.checked) {
+        textEl.classList.add('line-through', 'text-slate-400');
+        item.classList.add('opacity-70');
+    }
+
+    checkEl.addEventListener('change', () => {
+        onToggle(todo.id, checkEl.checked);
+    });
+
     list.appendChild(fragment);
 };
 
 const renderList = (
     list: HTMLUListElement,
     count: HTMLElement,
-    template: HTMLTemplateElement
+    template: HTMLTemplateElement,
+    onToggle: (id: TodoId, checked: boolean) => void
 ) => {
-    count.textContent = `${todos.length} 件`;
+    const done = todos.filter((todo) => todo.checked).length;
+    count.textContent = `${todos.length} 件（完了 ${done}）`;
     list.replaceChildren();
-    todos.forEach((todo) => appendTodoItem(list, template, todo));
+    todos.forEach((todo) => appendTodoItem(list, template, todo, onToggle));
 };
 
 window.addEventListener('load', () => {
@@ -48,20 +70,28 @@ window.addEventListener('load', () => {
     if (!(confirmDialog instanceof HTMLDialogElement)) return;
     if (!(confirmMessage instanceof HTMLParagraphElement)) return;
 
+    const handleToggle = (id: TodoId, checked: boolean) => {
+        todos = todos.map((todo) =>
+            todo.id === id ? { ...todo, checked } : todo
+        );
+        renderList(list, count, template, handleToggle);
+    };
+
     const handleAdd = (e: Event) => {
         e.preventDefault();
-        const todo = input.value.trim();
-        if (!todo) return;
+        const name = input.value.trim();
+        if (!name) return;
+
+        const todo = createTodo(name);
         todos.push(todo);
-        appendTodoItem(list, template, todo);
-        count.textContent = `${todos.length} 件`;
+        renderList(list, count, template, handleToggle);
         input.value = '';
         input.focus();
     };
 
     const handleClear = async () => {
         if (!todos.length) return;
-        
+
         const ok = await confirm(
             confirmDialog,
             confirmMessage,
@@ -69,13 +99,13 @@ window.addEventListener('load', () => {
         );
         if (!ok) return;
 
-        todos.length = 0;
-        renderList(list, count, template);
+        todos = [];
+        renderList(list, count, template, handleToggle);
         input.value = '';
         input.focus();
     };
 
     app.addEventListener('submit', handleAdd);
     clear.addEventListener('click', handleClear);
-    renderList(list, count, template);
+    renderList(list, count, template, handleToggle);
 });

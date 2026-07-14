@@ -4,11 +4,11 @@
   "description": "",
   "main": "dist/index.js",
   "scripts": {
-    "postinstall": "flow-typed install --skip",
+    "postinstall": "flow-typed install uuid@8.3.2 --skip",
     "dev": "pnpm build && concurrently -k \"nodemon --watch src --ext js,html,css --exec 'pnpm run build'\" \"live-server dist --port=3000\"",
     "flow": "flow",
     "check": "flow check",
-    "build": "babel src --out-dir dist && postcss src/css/input.css -o dist/css/style.css && cp src/index.html dist/index.html",
+    "build": "babel src/js --out-dir dist/js-tmp && esbuild dist/js-tmp/index.js --bundle --format=esm --outfile=dist/js/index.js && rm -rf dist/js-tmp && postcss src/css/input.css -o dist/css/style.css && cp src/index.html dist/index.html",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -22,6 +22,7 @@
     "@tailwindcss/postcss": "^4.3.2",
     "autoprefixer": "^10.5.2",
     "concurrently": "^10.0.3",
+    "esbuild": "^0.28.1",
     "flow-bin": "^0.322.0",
     "flow-typed": "^4.1.1",
     "live-server": "^1.2.2",
@@ -29,5 +30,8 @@
     "postcss": "^8.5.19",
     "postcss-cli": "^11.0.1",
     "tailwindcss": "^4.3.2"
+  },
+  "dependencies": {
+    "uuid": "8.3.2"
   }
 }

@@ -50,8 +50,15 @@
     </main>
 
     <template id="todo-item-template">
-        <li class="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
-            <span class="h-2 w-2 shrink-0 rounded-full bg-indigo-500"></span>
+        <li
+            data-todo-item
+            class="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700"
+        >
+            <input
+                type="checkbox"
+                data-todo-check
+                class="h-4 w-4 shrink-0 rounded border-slate-300 text-indigo-600 focus:ring-indigo-200"
+            >
             <span class="flex-1" data-todo-text></span>
         </li>
     </template>
