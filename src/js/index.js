@@ -11,6 +11,7 @@ const appendTodoItem = (
   template: HTMLTemplateElement,
   todo: Todo,
   onToggle: (id: TodoId, checked: boolean) => void,
+  onDelete: (id: TodoId, name: string) => void | Promise<void>,
 ) => {
   const fragment = template.content.cloneNode(true);
   if (!(fragment instanceof DocumentFragment)) return;
@@ -18,10 +19,12 @@ const appendTodoItem = (
   const item = fragment.querySelector('[data-todo-item]');
   const textEl = fragment.querySelector('[data-todo-text]');
   const checkEl = fragment.querySelector('[data-todo-check]');
+  const deleteEl = fragment.querySelector('[data-todo-delete]');
 
   if (!(item instanceof HTMLLIElement)) return;
   if (!(textEl instanceof HTMLSpanElement)) return;
   if (!(checkEl instanceof HTMLInputElement)) return;
+  if (!(deleteEl instanceof HTMLButtonElement)) return;
 
   item.dataset.todoId = todo.id;
   textEl.textContent = todo.name;
@@ -36,6 +39,10 @@ const appendTodoItem = (
     onToggle(todo.id, checkEl.checked);
   });
 
+  deleteEl.addEventListener('click', () => {
+    void onDelete(todo.id, todo.name);
+  });
+
   list.appendChild(fragment);
 };
 
@@ -44,11 +51,12 @@ const renderList = (
   count: HTMLElement,
   template: HTMLTemplateElement,
   onToggle: (id: TodoId, checked: boolean) => void,
+  onDelete: (id: TodoId, name: string) => void | Promise<void>,
 ) => {
   const done = todos.filter((todo) => todo.checked).length;
   count.textContent = `${todos.length} 件（完了 ${done}）`;
   list.replaceChildren();
-  todos.forEach((todo) => appendTodoItem(list, template, todo, onToggle));
+  todos.forEach((todo) => appendTodoItem(list, template, todo, onToggle, onDelete));
 };
 
 window.addEventListener('load', () => {
@@ -70,9 +78,21 @@ window.addEventListener('load', () => {
   if (!(confirmDialog instanceof HTMLDialogElement)) return;
   if (!(confirmMessage instanceof HTMLParagraphElement)) return;
 
+  const refresh = () => {
+    renderList(list, count, template, handleToggle, handleDelete);
+  };
+
   const handleToggle = (id: TodoId, checked: boolean) => {
     todos = todos.map((todo) => (todo.id === id ? { ...todo, checked } : todo));
-    renderList(list, count, template, handleToggle);
+    refresh();
+  };
+
+  const handleDelete = async (id: TodoId, name: string) => {
+    const ok = await confirm(confirmDialog, confirmMessage, `「${name}」を削除しますか？`);
+    if (!ok) return;
+
+    todos = todos.filter((todo) => todo.id !== id);
+    refresh();
   };
 
   const handleAdd = (e: Event) => {
@@ -82,7 +102,7 @@ window.addEventListener('load', () => {
 
     const todo = createTodo(name);
     todos.push(todo);
-    renderList(list, count, template, handleToggle);
+    refresh();
     input.value = '';
     input.focus();
   };
@@ -94,12 +114,12 @@ window.addEventListener('load', () => {
     if (!ok) return;
 
     todos = [];
-    renderList(list, count, template, handleToggle);
+    refresh();
     input.value = '';
     input.focus();
   };
 
   app.addEventListener('submit', handleAdd);
   clear.addEventListener('click', handleClear);
-  renderList(list, count, template, handleToggle);
+  refresh();
 });
