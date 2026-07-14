@@ -1,0 +1,34 @@
+# pre-commit: lint / format / Flow typecheck
+pre-commit:
+  parallel: true
+  commands:
+    lint:
+      glob: '*.{js,cjs,mjs}'
+      run: pnpm exec eslint {staged_files}
+    prettier:
+      glob: '*.{js,cjs,mjs,json,css,html,yml,yaml,md}'
+      run: pnpm exec prettier --write {staged_files}
+      stage_fixed: true
+    check:
+      run: pnpm run check
+
+# commit message convention
+commit-msg:
+  commands:
+    commitlint:
+      run: pnpm exec commitlint --edit {1}
+
+# install when lockfile / package.json changes after merge or checkout
+post-merge:
+  commands:
+    install-deps:
+      files: git diff-tree -r --name-only --no-commit-id ORIG_HEAD HEAD
+      glob: '{pnpm-lock.yaml,package.json}'
+      run: pnpm install
+
+post-checkout:
+  commands:
+    install-deps:
+      files: git diff-tree -r --name-only --no-commit-id ORIG_HEAD HEAD
+      glob: '{pnpm-lock.yaml,package.json}'
+      run: pnpm install

@@ -1,9 +1,9 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 @source not "../../node_modules";
 @source "../**/*.{html,js}";
 
 @layer base {
-    dialog::backdrop {
-        background-color: rgb(15 23 42 / 0.45);
-    }
+  dialog::backdrop {
+    background-color: rgb(15 23 42 / 0.45);
+  }
 }

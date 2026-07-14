@@ -1,12 +1,3 @@
 {
-  "env": [
-    "bom",
-    "cssom",
-    "dom",
-    "geometry",
-    "html",
-    "serviceworkers",
-    "streams",
-    "web-animations"
-  ]
+  "env": ["bom", "cssom", "dom", "geometry", "html", "serviceworkers", "streams", "web-animations"]
 }

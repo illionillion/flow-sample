@@ -4,10 +4,15 @@
   "description": "",
   "main": "dist/index.js",
   "scripts": {
+    "prepare": "lefthook install",
     "postinstall": "flow-typed install uuid@8.3.2 --skip",
     "dev": "pnpm build && concurrently -k \"nodemon --watch src --ext js,html,css --exec 'pnpm run build'\" \"live-server dist --port=3000\"",
     "flow": "flow",
     "check": "flow check",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "build": "babel src/js --out-dir dist/js-tmp && esbuild dist/js-tmp/index.js --bundle --format=esm --outfile=dist/js/index.js && rm -rf dist/js-tmp && postcss src/css/input.css -o dist/css/style.css && cp src/index.html dist/index.html",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -15,21 +20,36 @@
   "author": "",
   "license": "ISC",
   "type": "commonjs",
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "lefthook"
+    ]
+  },
   "devDependencies": {
     "@babel/cli": "^8.0.4",
     "@babel/core": "^8.0.1",
     "@babel/preset-flow": "^8.0.1",
+    "@commitlint/cli": "^21.2.1",
+    "@commitlint/config-conventional": "^21.2.0",
     "@tailwindcss/postcss": "^4.3.2",
     "autoprefixer": "^10.5.2",
     "concurrently": "^10.0.3",
     "esbuild": "^0.28.1",
+    "eslint": "^9.39.5",
+    "eslint-config-prettier": "^10.1.8",
     "flow-bin": "^0.322.0",
     "flow-typed": "^4.1.1",
+    "hermes-eslint": "^0.36.1",
+    "hermes-parser": "^0.36.1",
+    "lefthook": "^2.1.10",
     "live-server": "^1.2.2",
     "nodemon": "^3.1.14",
     "postcss": "^8.5.19",
     "postcss-cli": "^11.0.1",
-    "tailwindcss": "^4.3.2"
+    "prettier": "^3.9.5",
+    "tailwindcss": "^4.3.2",
+    "typescript": "^5.9.3"
   },
   "dependencies": {
     "uuid": "8.3.2"
