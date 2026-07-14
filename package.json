@@ -2,7 +2,7 @@
   "name": "flow-sample",
   "version": "1.0.0",
   "description": "",
-  "main": "dist/index.js",
+  "main": "dist/js/index.js",
   "packageManager": "pnpm@10.15.0",
   "scripts": {
     "prepare": "lefthook install",
@@ -14,7 +14,9 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "build": "babel src/js --out-dir dist/js-tmp && esbuild dist/js-tmp/index.js --bundle --format=esm --outfile=dist/js/index.js && rm -rf dist/js-tmp && postcss src/css/input.css -o dist/css/style.css && cp src/index.html dist/index.html",
+    "build": "OUT=dist pnpm run _build",
+    "build:docs": "OUT=docs pnpm run _build",
+    "_build": "babel src/js --out-dir $OUT/js-tmp && esbuild $OUT/js-tmp/index.js --bundle --format=esm --outfile=$OUT/js/index.js && rm -rf $OUT/js-tmp && postcss src/css/input.css -o $OUT/css/style.css && cp src/index.html $OUT/index.html",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],

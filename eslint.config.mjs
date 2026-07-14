@@ -4,7 +4,7 @@ import * as hermesEslint from 'hermes-eslint';
 /** @type {import('eslint').Linter.Config[]} */
 export default [
   {
-    ignores: ['dist/**', 'node_modules/**', 'flow-typed/**'],
+    ignores: ['dist/**', 'docs/**', 'node_modules/**', 'flow-typed/**'],
   },
   {
     files: ['**/*.{js,mjs}'],
