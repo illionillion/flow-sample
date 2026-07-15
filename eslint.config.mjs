@@ -32,6 +32,7 @@ export default [
         HTMLElement: 'readonly',
         DocumentFragment: 'readonly',
         Event: 'readonly',
+        KeyboardEvent: 'readonly',
       },
     },
     rules: {

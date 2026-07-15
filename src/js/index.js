@@ -5,6 +5,7 @@ import { createTodo } from './types.js';
 import type { Todo, TodoId } from './types.js';
 
 let todos: Array<Todo> = [];
+let editingId: TodoId | null = null;
 
 const appendTodoItem = (
   list: HTMLUListElement,
@@ -12,22 +13,34 @@ const appendTodoItem = (
   todo: Todo,
   onToggle: (id: TodoId, checked: boolean) => void,
   onDelete: (id: TodoId, name: string) => void | Promise<void>,
+  onStartEdit: (id: TodoId) => void,
+  onSaveEdit: (id: TodoId, name: string) => void,
+  onCancelEdit: () => void,
 ) => {
   const fragment = template.content.cloneNode(true);
   if (!(fragment instanceof DocumentFragment)) return;
 
   const item = fragment.querySelector('[data-todo-item]');
   const textEl = fragment.querySelector('[data-todo-text]');
+  const editInput = fragment.querySelector('[data-todo-edit-input]');
   const checkEl = fragment.querySelector('[data-todo-check]');
+  const editEl = fragment.querySelector('[data-todo-edit]');
+  const saveEl = fragment.querySelector('[data-todo-save]');
+  const cancelEl = fragment.querySelector('[data-todo-cancel]');
   const deleteEl = fragment.querySelector('[data-todo-delete]');
 
   if (!(item instanceof HTMLLIElement)) return;
   if (!(textEl instanceof HTMLSpanElement)) return;
+  if (!(editInput instanceof HTMLInputElement)) return;
   if (!(checkEl instanceof HTMLInputElement)) return;
+  if (!(editEl instanceof HTMLButtonElement)) return;
+  if (!(saveEl instanceof HTMLButtonElement)) return;
+  if (!(cancelEl instanceof HTMLButtonElement)) return;
   if (!(deleteEl instanceof HTMLButtonElement)) return;
 
   item.dataset.todoId = todo.id;
   textEl.textContent = todo.name;
+  editInput.value = todo.name;
   checkEl.checked = todo.checked;
 
   if (todo.checked) {
@@ -35,8 +48,40 @@ const appendTodoItem = (
     item.classList.add('opacity-70');
   }
 
+  const isEditing = editingId === todo.id;
+  if (isEditing) {
+    textEl.classList.add('hidden');
+    editEl.classList.add('hidden');
+    deleteEl.classList.add('hidden');
+    editInput.classList.remove('hidden');
+    saveEl.classList.remove('hidden');
+    cancelEl.classList.remove('hidden');
+  }
+
   checkEl.addEventListener('change', () => {
     onToggle(todo.id, checkEl.checked);
+  });
+
+  editEl.addEventListener('click', () => {
+    onStartEdit(todo.id);
+  });
+
+  const save = () => {
+    onSaveEdit(todo.id, editInput.value);
+  };
+
+  saveEl.addEventListener('click', save);
+  cancelEl.addEventListener('click', onCancelEdit);
+
+  editInput.addEventListener('keydown', (e: KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      save();
+    }
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      onCancelEdit();
+    }
   });
 
   deleteEl.addEventListener('click', () => {
@@ -44,6 +89,11 @@ const appendTodoItem = (
   });
 
   list.appendChild(fragment);
+
+  if (isEditing) {
+    editInput.focus();
+    editInput.select();
+  }
 };
 
 const renderList = (
@@ -52,11 +102,16 @@ const renderList = (
   template: HTMLTemplateElement,
   onToggle: (id: TodoId, checked: boolean) => void,
   onDelete: (id: TodoId, name: string) => void | Promise<void>,
+  onStartEdit: (id: TodoId) => void,
+  onSaveEdit: (id: TodoId, name: string) => void,
+  onCancelEdit: () => void,
 ) => {
   const done = todos.filter((todo) => todo.checked).length;
   count.textContent = `${todos.length} 件（完了 ${done}）`;
   list.replaceChildren();
-  todos.forEach((todo) => appendTodoItem(list, template, todo, onToggle, onDelete));
+  todos.forEach((todo) =>
+    appendTodoItem(list, template, todo, onToggle, onDelete, onStartEdit, onSaveEdit, onCancelEdit),
+  );
 };
 
 window.addEventListener('load', () => {
@@ -79,7 +134,16 @@ window.addEventListener('load', () => {
   if (!(confirmMessage instanceof HTMLParagraphElement)) return;
 
   const refresh = () => {
-    renderList(list, count, template, handleToggle, handleDelete);
+    renderList(
+      list,
+      count,
+      template,
+      handleToggle,
+      handleDelete,
+      handleStartEdit,
+      handleSaveEdit,
+      handleCancelEdit,
+    );
   };
 
   const handleToggle = (id: TodoId, checked: boolean) => {
@@ -91,7 +155,33 @@ window.addEventListener('load', () => {
     const ok = await confirm(confirmDialog, confirmMessage, `「${name}」を削除しますか？`);
     if (!ok) return;
 
+    if (editingId === id) {
+      editingId = null;
+    }
     todos = todos.filter((todo) => todo.id !== id);
+    refresh();
+  };
+
+  const handleStartEdit = (id: TodoId) => {
+    editingId = id;
+    refresh();
+  };
+
+  const handleSaveEdit = (id: TodoId, name: string) => {
+    const nextName = name.trim();
+    if (!nextName) {
+      editingId = null;
+      refresh();
+      return;
+    }
+
+    todos = todos.map((todo) => (todo.id === id ? { ...todo, name: nextName } : todo));
+    editingId = null;
+    refresh();
+  };
+
+  const handleCancelEdit = () => {
+    editingId = null;
     refresh();
   };
 
@@ -113,6 +203,7 @@ window.addEventListener('load', () => {
     const ok = await confirm(confirmDialog, confirmMessage, 'すべての todo を削除しますか？');
     if (!ok) return;
 
+    editingId = null;
     todos = [];
     refresh();
     input.value = '';
