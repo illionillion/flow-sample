@@ -140,15 +140,17 @@ var require_index = __commonJS({
     init_confirm();
     init_types();
     var todos = [];
-    var appendTodoItem = (list, template, todo, onToggle) => {
+    var appendTodoItem = (list, template, todo, onToggle, onDelete) => {
       const fragment = template.content.cloneNode(true);
       if (!(fragment instanceof DocumentFragment)) return;
       const item = fragment.querySelector("[data-todo-item]");
       const textEl = fragment.querySelector("[data-todo-text]");
       const checkEl = fragment.querySelector("[data-todo-check]");
+      const deleteEl = fragment.querySelector("[data-todo-delete]");
       if (!(item instanceof HTMLLIElement)) return;
       if (!(textEl instanceof HTMLSpanElement)) return;
       if (!(checkEl instanceof HTMLInputElement)) return;
+      if (!(deleteEl instanceof HTMLButtonElement)) return;
       item.dataset.todoId = todo.id;
       textEl.textContent = todo.name;
       checkEl.checked = todo.checked;
@@ -159,13 +161,16 @@ var require_index = __commonJS({
       checkEl.addEventListener("change", () => {
         onToggle(todo.id, checkEl.checked);
       });
+      deleteEl.addEventListener("click", () => {
+        void onDelete(todo.id, todo.name);
+      });
       list.appendChild(fragment);
     };
-    var renderList = (list, count, template, onToggle) => {
+    var renderList = (list, count, template, onToggle, onDelete) => {
       const done = todos.filter((todo) => todo.checked).length;
       count.textContent = `${todos.length} \u4EF6\uFF08\u5B8C\u4E86 ${done}\uFF09`;
       list.replaceChildren();
-      todos.forEach((todo) => appendTodoItem(list, template, todo, onToggle));
+      todos.forEach((todo) => appendTodoItem(list, template, todo, onToggle, onDelete));
     };
     window.addEventListener("load", () => {
       const app = document.getElementById("app");
@@ -184,12 +189,21 @@ var require_index = __commonJS({
       if (!(template instanceof HTMLTemplateElement)) return;
       if (!(confirmDialog instanceof HTMLDialogElement)) return;
       if (!(confirmMessage instanceof HTMLParagraphElement)) return;
+      const refresh = () => {
+        renderList(list, count, template, handleToggle, handleDelete);
+      };
       const handleToggle = (id, checked) => {
         todos = todos.map((todo) => todo.id === id ? {
           ...todo,
           checked
         } : todo);
-        renderList(list, count, template, handleToggle);
+        refresh();
+      };
+      const handleDelete = async (id, name) => {
+        const ok = await confirm(confirmDialog, confirmMessage, `\u300C${name}\u300D\u3092\u524A\u9664\u3057\u307E\u3059\u304B\uFF1F`);
+        if (!ok) return;
+        todos = todos.filter((todo) => todo.id !== id);
+        refresh();
       };
       const handleAdd = (e) => {
         e.preventDefault();
@@ -197,7 +211,7 @@ var require_index = __commonJS({
         if (!name) return;
         const todo = createTodo(name);
         todos.push(todo);
-        renderList(list, count, template, handleToggle);
+        refresh();
         input.value = "";
         input.focus();
       };
@@ -206,13 +220,13 @@ var require_index = __commonJS({
         const ok = await confirm(confirmDialog, confirmMessage, "\u3059\u3079\u3066\u306E todo \u3092\u524A\u9664\u3057\u307E\u3059\u304B\uFF1F");
         if (!ok) return;
         todos = [];
-        renderList(list, count, template, handleToggle);
+        refresh();
         input.value = "";
         input.focus();
       };
       app.addEventListener("submit", handleAdd);
       clear.addEventListener("click", handleClear);
-      renderList(list, count, template, handleToggle);
+      refresh();
     });
   }
 });
