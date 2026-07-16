@@ -33,6 +33,9 @@ importers:
       autoprefixer:
         specifier: ^10.5.2
         version: 10.5.2(postcss@8.5.19)
+      babel-plugin-syntax-hermes-parser:
+        specifier: 0.37.0
+        version: 0.37.0
       concurrently:
         specifier: ^10.0.3
         version: 10.0.3
@@ -791,6 +794,9 @@ packages:
     hasBin: true
     peerDependencies:
       postcss: ^8.1.0
+
+  babel-plugin-syntax-hermes-parser@0.37.0:
+    resolution: {integrity: sha512-7I9T16lJTjHG6JhHOmM/iqO/UGGQwAcAAD4/tsk+GSjPf9bbusBsPlz1scyGehImMfH1Yopbj0aQYxhTAHdcdg==}
 
   balanced-match@1.0.2:
     resolution: {integrity: sha512-3oSeUO0TMV67hN1AmbXsK4yaqU7tjiHlbxRDZOpH0KW9+CeX4bRAaX0Anxt0tx2MrpRpWwQaPwIlISEJhYU5Pw==}
@@ -3323,6 +3329,10 @@ snapshots:
       picocolors: 1.1.1
       postcss: 8.5.19
       postcss-value-parser: 4.2.0
+
+  babel-plugin-syntax-hermes-parser@0.37.0:
+    dependencies:
+      hermes-parser: 0.37.0
 
   balanced-match@1.0.2: {}
 
