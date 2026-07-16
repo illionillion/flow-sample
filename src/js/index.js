@@ -117,7 +117,7 @@ const renderList = (
   );
 };
 
-window.addEventListener('load', () => {
+const main = () => {
   const app = document.getElementById('app');
   const input = document.getElementById('input');
   const list = document.getElementById('list');
@@ -227,4 +227,6 @@ window.addEventListener('load', () => {
   app.addEventListener('submit', handleAdd);
   clear.addEventListener('click', handleClear);
   refresh();
-});
+};
+
+window.addEventListener('load', main);
