@@ -14,6 +14,20 @@ export type Todo = {|
   checked: boolean,
 |};
 
+/**
+ * Discriminated union for inline edit UI.
+ * After checking `type`, Flow narrows which fields exist.
+ */
+export type EditState = {| type: 'idle' |} | {| type: 'editing', id: TodoId, draft: string |};
+
+export const idleEditState = (): EditState => ({ type: 'idle' });
+
+export const startEditing = (id: TodoId, draft: string): EditState => ({
+  type: 'editing',
+  id,
+  draft,
+});
+
 export const createTodoId = (): TodoId => uuidv4();
 
 export const createTodo = (name: string): Todo => ({
