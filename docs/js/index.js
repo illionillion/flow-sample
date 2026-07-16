@@ -1,10 +1,10 @@
 var __getOwnPropNames = Object.getOwnPropertyNames;
-var __esm = (fn, res, err) => function __init() {
-  if (err) throw err[0];
+var __esm = (fn, res, err2) => function __init() {
+  if (err2) throw err2[0];
   try {
     return fn && (res = (0, fn[__getOwnPropNames(fn)[0]])(fn = 0)), res;
   } catch (e) {
-    throw err = [e], e;
+    throw err2 = [e], e;
   }
 };
 var __commonJS = (cb, mod) => function __require() {
@@ -27,6 +27,21 @@ var init_confirm = __esm({
         once: true
       });
       dialog.showModal();
+    });
+  }
+});
+
+// docs/js-tmp/result.js
+var ok, err;
+var init_result = __esm({
+  "docs/js-tmp/result.js"() {
+    ok = (value) => ({
+      ok: true,
+      value
+    });
+    err = (error) => ({
+      ok: false,
+      error
     });
   }
 });
@@ -121,10 +136,11 @@ var init_esm_browser = __esm({
 });
 
 // docs/js-tmp/types.js
-var idleEditState, startEditing, createTodoId, createTodo;
+var idleEditState, startEditing, createTodoId, createTodo, parseTodoId, parseTodo, parseTodos;
 var init_types = __esm({
   "docs/js-tmp/types.js"() {
     init_esm_browser();
+    init_result();
     idleEditState = () => ({
       type: "idle"
     });
@@ -139,6 +155,80 @@ var init_types = __esm({
       name,
       checked: false
     });
+    parseTodoId = (value) => {
+      if (typeof value !== "string" || value.trim() === "") {
+        return err("todo id must be a non-empty string");
+      }
+      const id = value;
+      return ok(id);
+    };
+    parseTodo = (value) => {
+      if (typeof value !== "object" || value === null || Array.isArray(value)) {
+        return err("todo must be an object");
+      }
+      const idResult = parseTodoId(value.id);
+      if (!idResult.ok) return idResult;
+      if (typeof value.name !== "string") {
+        return err("todo name must be a string");
+      }
+      if (typeof value.checked !== "boolean") {
+        return err("todo checked must be a boolean");
+      }
+      return ok({
+        id: idResult.value,
+        name: value.name,
+        checked: value.checked
+      });
+    };
+    parseTodos = (value) => {
+      if (!Array.isArray(value)) {
+        return err("todos must be an array");
+      }
+      const todos = [];
+      for (let i2 = 0; i2 < value.length; i2++) {
+        const parsed = parseTodo(value[i2]);
+        if (!parsed.ok) {
+          return err(`todos[${i2}]: ${parsed.error}`);
+        }
+        todos.push(parsed.value);
+      }
+      return ok(todos);
+    };
+  }
+});
+
+// docs/js-tmp/storage.js
+var STORAGE_KEY, serializeTodos, deserializeTodos, loadTodos, saveTodos;
+var init_storage = __esm({
+  "docs/js-tmp/storage.js"() {
+    init_result();
+    init_types();
+    STORAGE_KEY = "flow-sample:todos";
+    serializeTodos = (todos) => JSON.stringify(todos);
+    deserializeTodos = (raw) => {
+      let parsed;
+      try {
+        parsed = JSON.parse(raw);
+      } catch {
+        return err("invalid JSON");
+      }
+      return parseTodos(parsed);
+    };
+    loadTodos = () => {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw == null || raw === "") {
+        return ok([]);
+      }
+      return deserializeTodos(raw);
+    };
+    saveTodos = (todos) => {
+      try {
+        localStorage.setItem(STORAGE_KEY, serializeTodos(todos));
+        return ok(void 0);
+      } catch {
+        return err("failed to write localStorage");
+      }
+    };
   }
 });
 
@@ -146,8 +236,10 @@ var init_types = __esm({
 var require_index = __commonJS({
   "docs/js-tmp/index.js"() {
     init_confirm();
+    init_storage();
     init_types();
-    var todos = [];
+    var initial = loadTodos();
+    var todos = initial.ok ? initial.value : [];
     var editState = idleEditState();
     var appendTodoItem = (list, template, todo, onToggle, onDelete, onStartEdit, onSaveEdit, onCancelEdit) => {
       const fragment = template.content.cloneNode(true);
@@ -239,7 +331,11 @@ var require_index = __commonJS({
       if (!(template instanceof HTMLTemplateElement)) return;
       if (!(confirmDialog instanceof HTMLDialogElement)) return;
       if (!(confirmMessage instanceof HTMLParagraphElement)) return;
+      const persist = () => {
+        saveTodos(todos);
+      };
       const refresh = () => {
+        persist();
         renderList(list, count, template, handleToggle, handleDelete, handleStartEdit, handleSaveEdit, handleCancelEdit);
       };
       const handleToggle = (id, checked) => {
@@ -250,8 +346,8 @@ var require_index = __commonJS({
         refresh();
       };
       const handleDelete = async (id, name) => {
-        const ok = await confirm(confirmDialog, confirmMessage, `\u300C${name}\u300D\u3092\u524A\u9664\u3057\u307E\u3059\u304B\uFF1F`);
-        if (!ok) return;
+        const ok2 = await confirm(confirmDialog, confirmMessage, `\u300C${name}\u300D\u3092\u524A\u9664\u3057\u307E\u3059\u304B\uFF1F`);
+        if (!ok2) return;
         if (editState.type === "editing" && editState.id === id) {
           editState = idleEditState();
         }
@@ -298,8 +394,8 @@ var require_index = __commonJS({
       };
       const handleClear = async () => {
         if (!todos.length) return;
-        const ok = await confirm(confirmDialog, confirmMessage, "\u3059\u3079\u3066\u306E todo \u3092\u524A\u9664\u3057\u307E\u3059\u304B\uFF1F");
-        if (!ok) return;
+        const ok2 = await confirm(confirmDialog, confirmMessage, "\u3059\u3079\u3066\u306E todo \u3092\u524A\u9664\u3057\u307E\u3059\u304B\uFF1F");
+        if (!ok2) return;
         editState = idleEditState();
         todos = [];
         refresh();
