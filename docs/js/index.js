@@ -15,6 +15,27 @@ var __commonJS = (cb, mod) => function __require() {
   }
 };
 
+// docs/js-tmp/guards.js
+function isString(value) {
+  return typeof value === "string";
+}
+function isNonEmptyString(value) {
+  return typeof value === "string" && value.trim() !== "";
+}
+function isBoolean(value) {
+  return typeof value === "boolean";
+}
+function isPlainObject(value) {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+function isNonMaybe(value) {
+  return value != null;
+}
+var init_guards = __esm({
+  "docs/js-tmp/guards.js"() {
+  }
+});
+
 // docs/js-tmp/confirm.js
 var confirm;
 var init_confirm = __esm({
@@ -136,10 +157,11 @@ var init_esm_browser = __esm({
 });
 
 // docs/js-tmp/types.js
-var idleEditState, startEditing, createTodoId, createTodo, parseTodoId, parseTodo, parseTodos;
+var idleEditState, startEditing, createTodoId, createTodo, findTodo, updateTodo, parseTodoId, parseTodo, parseTodos;
 var init_types = __esm({
   "docs/js-tmp/types.js"() {
     init_esm_browser();
+    init_guards();
     init_result();
     idleEditState = () => ({
       type: "idle"
@@ -155,29 +177,36 @@ var init_types = __esm({
       name,
       checked: false
     });
+    findTodo = (todos, id) => todos.find((todo) => todo.id === id);
+    updateTodo = (todo, patch) => ({
+      ...todo,
+      ...patch
+    });
     parseTodoId = (value) => {
-      if (typeof value !== "string" || value.trim() === "") {
+      if (!isNonEmptyString(value)) {
         return err("todo id must be a non-empty string");
       }
       const id = value;
       return ok(id);
     };
     parseTodo = (value) => {
-      if (typeof value !== "object" || value === null || Array.isArray(value)) {
+      if (!isPlainObject(value)) {
         return err("todo must be an object");
       }
       const idResult = parseTodoId(value.id);
       if (!idResult.ok) return idResult;
-      if (typeof value.name !== "string") {
+      const name = value.name;
+      if (!isString(name)) {
         return err("todo name must be a string");
       }
-      if (typeof value.checked !== "boolean") {
+      const checked = value.checked;
+      if (!isBoolean(checked)) {
         return err("todo checked must be a boolean");
       }
       return ok({
         id: idResult.value,
-        name: value.name,
-        checked: value.checked
+        name,
+        checked
       });
     };
     parseTodos = (value) => {
@@ -235,6 +264,7 @@ var init_storage = __esm({
 // docs/js-tmp/index.js
 var require_index = __commonJS({
   "docs/js-tmp/index.js"() {
+    init_guards();
     init_confirm();
     init_storage();
     init_types();
@@ -339,10 +369,9 @@ var require_index = __commonJS({
         renderList(list, count, template, handleToggle, handleDelete, handleStartEdit, handleSaveEdit, handleCancelEdit);
       };
       const handleToggle = (id, checked) => {
-        todos = todos.map((todo) => todo.id === id ? {
-          ...todo,
+        todos = todos.map((todo) => todo.id === id ? updateTodo(todo, {
           checked
-        } : todo);
+        }) : todo);
         refresh();
       };
       const handleDelete = async (id, name) => {
@@ -355,8 +384,8 @@ var require_index = __commonJS({
         refresh();
       };
       const handleStartEdit = (id) => {
-        const todo = todos.find((t) => t.id === id);
-        if (!todo) return;
+        const todo = findTodo(todos, id);
+        if (!isNonMaybe(todo)) return;
         editState = startEditing(todo.id, todo.name);
         refresh();
       };
@@ -371,10 +400,9 @@ var require_index = __commonJS({
           refresh();
           return;
         }
-        todos = todos.map((todo) => todo.id === id ? {
-          ...todo,
+        todos = todos.map((todo) => todo.id === id ? updateTodo(todo, {
           name: nextName
-        } : todo);
+        }) : todo);
         editState = idleEditState();
         refresh();
       };
