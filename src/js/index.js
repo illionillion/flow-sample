@@ -1,8 +1,9 @@
 /* @flow */
 
+import { isNonMaybe } from './guards.js';
 import { confirm } from './confirm.js';
 import { loadTodos, saveTodos } from './storage.js';
-import { createTodo, idleEditState, startEditing } from './types.js';
+import { createTodo, findTodo, idleEditState, startEditing, updateTodo } from './types.js';
 import type { EditState, Todo, TodoId } from './types.js';
 
 const initial = loadTodos();
@@ -155,7 +156,7 @@ const main = () => {
   };
 
   const handleToggle = (id: TodoId, checked: boolean) => {
-    todos = todos.map((todo) => (todo.id === id ? { ...todo, checked } : todo));
+    todos = todos.map((todo) => (todo.id === id ? updateTodo(todo, { checked }) : todo));
     refresh();
   };
 
@@ -171,8 +172,8 @@ const main = () => {
   };
 
   const handleStartEdit = (id: TodoId) => {
-    const todo = todos.find((t) => t.id === id);
-    if (!todo) return;
+    const todo = findTodo(todos, id);
+    if (!isNonMaybe(todo)) return;
 
     editState = startEditing(todo.id, todo.name);
     refresh();
@@ -189,7 +190,7 @@ const main = () => {
       return;
     }
 
-    todos = todos.map((todo) => (todo.id === id ? { ...todo, name: nextName } : todo));
+    todos = todos.map((todo) => (todo.id === id ? updateTodo(todo, { name: nextName }) : todo));
     editState = idleEditState();
     refresh();
   };
