@@ -1,11 +1,11 @@
 /* @flow */
 
 import { confirm } from './confirm.js';
-import { createTodo } from './types.js';
-import type { Todo, TodoId } from './types.js';
+import { createTodo, idleEditState, startEditing } from './types.js';
+import type { EditState, Todo, TodoId } from './types.js';
 
 let todos: Array<Todo> = [];
-let editingId: TodoId | null = null;
+let editState: EditState = idleEditState();
 
 const appendTodoItem = (
   list: HTMLUListElement,
@@ -14,7 +14,7 @@ const appendTodoItem = (
   onToggle: (id: TodoId, checked: boolean) => void,
   onDelete: (id: TodoId, name: string) => void | Promise<void>,
   onStartEdit: (id: TodoId) => void,
-  onSaveEdit: (id: TodoId, name: string) => void,
+  onSaveEdit: (name: string) => void,
   onCancelEdit: () => void,
 ) => {
   const fragment = template.content.cloneNode(true);
@@ -40,7 +40,6 @@ const appendTodoItem = (
 
   item.dataset.todoId = todo.id;
   textEl.textContent = todo.name;
-  editInput.value = todo.name;
   checkEl.checked = todo.checked;
 
   if (todo.checked) {
@@ -48,14 +47,16 @@ const appendTodoItem = (
     item.classList.add('opacity-70');
   }
 
-  const isEditing = editingId === todo.id;
-  if (isEditing) {
+  if (editState.type === 'editing' && editState.id === todo.id) {
+    editInput.value = editState.draft;
     textEl.classList.add('hidden');
     editEl.classList.add('hidden');
     deleteEl.classList.add('hidden');
     editInput.classList.remove('hidden');
     saveEl.classList.remove('hidden');
     cancelEl.classList.remove('hidden');
+  } else {
+    editInput.value = todo.name;
   }
 
   checkEl.addEventListener('change', () => {
@@ -67,7 +68,7 @@ const appendTodoItem = (
   });
 
   const save = () => {
-    onSaveEdit(todo.id, editInput.value);
+    onSaveEdit(editInput.value);
   };
 
   saveEl.addEventListener('click', save);
@@ -90,7 +91,7 @@ const appendTodoItem = (
 
   list.appendChild(fragment);
 
-  if (isEditing) {
+  if (editState.type === 'editing' && editState.id === todo.id) {
     editInput.focus();
     editInput.select();
   }
@@ -103,7 +104,7 @@ const renderList = (
   onToggle: (id: TodoId, checked: boolean) => void,
   onDelete: (id: TodoId, name: string) => void | Promise<void>,
   onStartEdit: (id: TodoId) => void,
-  onSaveEdit: (id: TodoId, name: string) => void,
+  onSaveEdit: (name: string) => void,
   onCancelEdit: () => void,
 ) => {
   const done = todos.filter((todo) => todo.checked).length;
@@ -155,33 +156,39 @@ window.addEventListener('load', () => {
     const ok = await confirm(confirmDialog, confirmMessage, `「${name}」を削除しますか？`);
     if (!ok) return;
 
-    if (editingId === id) {
-      editingId = null;
+    if (editState.type === 'editing' && editState.id === id) {
+      editState = idleEditState();
     }
     todos = todos.filter((todo) => todo.id !== id);
     refresh();
   };
 
   const handleStartEdit = (id: TodoId) => {
-    editingId = id;
+    const todo = todos.find((t) => t.id === id);
+    if (!todo) return;
+
+    editState = startEditing(todo.id, todo.name);
     refresh();
   };
 
-  const handleSaveEdit = (id: TodoId, name: string) => {
+  const handleSaveEdit = (name: string) => {
+    if (editState.type !== 'editing') return;
+
+    const { id } = editState;
     const nextName = name.trim();
     if (!nextName) {
-      editingId = null;
+      editState = idleEditState();
       refresh();
       return;
     }
 
     todos = todos.map((todo) => (todo.id === id ? { ...todo, name: nextName } : todo));
-    editingId = null;
+    editState = idleEditState();
     refresh();
   };
 
   const handleCancelEdit = () => {
-    editingId = null;
+    editState = idleEditState();
     refresh();
   };
 
@@ -203,7 +210,7 @@ window.addEventListener('load', () => {
     const ok = await confirm(confirmDialog, confirmMessage, 'すべての todo を削除しますか？');
     if (!ok) return;
 
-    editingId = null;
+    editState = idleEditState();
     todos = [];
     refresh();
     input.value = '';
