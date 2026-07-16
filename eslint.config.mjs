@@ -33,6 +33,10 @@ export default [
         DocumentFragment: 'readonly',
         Event: 'readonly',
         KeyboardEvent: 'readonly',
+        localStorage: 'readonly',
+        JSON: 'readonly',
+        Array: 'readonly',
+        ReadonlyArray: 'readonly',
       },
     },
     rules: {

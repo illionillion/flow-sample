@@ -1,10 +1,12 @@
 /* @flow */
 
 import { confirm } from './confirm.js';
+import { loadTodos, saveTodos } from './storage.js';
 import { createTodo, idleEditState, startEditing } from './types.js';
 import type { EditState, Todo, TodoId } from './types.js';
 
-let todos: Array<Todo> = [];
+const initial = loadTodos();
+let todos: Array<Todo> = initial.ok ? initial.value : [];
 let editState: EditState = idleEditState();
 
 const appendTodoItem = (
@@ -134,7 +136,12 @@ window.addEventListener('load', () => {
   if (!(confirmDialog instanceof HTMLDialogElement)) return;
   if (!(confirmMessage instanceof HTMLParagraphElement)) return;
 
+  const persist = () => {
+    saveTodos(todos);
+  };
+
   const refresh = () => {
+    persist();
     renderList(
       list,
       count,
