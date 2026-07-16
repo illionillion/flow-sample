@@ -37,6 +37,9 @@ export default [
         JSON: 'readonly',
         Array: 'readonly',
         ReadonlyArray: 'readonly',
+        Partial: 'readonly',
+        Omit: 'readonly',
+        Readonly: 'readonly',
       },
     },
     rules: {

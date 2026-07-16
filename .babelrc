@@ -1,3 +1,4 @@
 {
+  "plugins": ["babel-plugin-syntax-hermes-parser"],
   "presets": ["@babel/preset-flow"]
 }
