@@ -121,10 +121,18 @@ var init_esm_browser = __esm({
 });
 
 // docs/js-tmp/types.js
-var createTodoId, createTodo;
+var idleEditState, startEditing, createTodoId, createTodo;
 var init_types = __esm({
   "docs/js-tmp/types.js"() {
     init_esm_browser();
+    idleEditState = () => ({
+      type: "idle"
+    });
+    startEditing = (id, draft) => ({
+      type: "editing",
+      id,
+      draft
+    });
     createTodoId = () => v4_default();
     createTodo = (name) => ({
       id: createTodoId(),
@@ -140,7 +148,7 @@ var require_index = __commonJS({
     init_confirm();
     init_types();
     var todos = [];
-    var editingId = null;
+    var editState = idleEditState();
     var appendTodoItem = (list, template, todo, onToggle, onDelete, onStartEdit, onSaveEdit, onCancelEdit) => {
       const fragment = template.content.cloneNode(true);
       if (!(fragment instanceof DocumentFragment)) return;
@@ -162,20 +170,21 @@ var require_index = __commonJS({
       if (!(deleteEl instanceof HTMLButtonElement)) return;
       item.dataset.todoId = todo.id;
       textEl.textContent = todo.name;
-      editInput.value = todo.name;
       checkEl.checked = todo.checked;
       if (todo.checked) {
         textEl.classList.add("line-through", "text-slate-400");
         item.classList.add("opacity-70");
       }
-      const isEditing = editingId === todo.id;
-      if (isEditing) {
+      if (editState.type === "editing" && editState.id === todo.id) {
+        editInput.value = editState.draft;
         textEl.classList.add("hidden");
         editEl.classList.add("hidden");
         deleteEl.classList.add("hidden");
         editInput.classList.remove("hidden");
         saveEl.classList.remove("hidden");
         cancelEl.classList.remove("hidden");
+      } else {
+        editInput.value = todo.name;
       }
       checkEl.addEventListener("change", () => {
         onToggle(todo.id, checkEl.checked);
@@ -184,7 +193,7 @@ var require_index = __commonJS({
         onStartEdit(todo.id);
       });
       const save = () => {
-        onSaveEdit(todo.id, editInput.value);
+        onSaveEdit(editInput.value);
       };
       saveEl.addEventListener("click", save);
       cancelEl.addEventListener("click", onCancelEdit);
@@ -202,7 +211,7 @@ var require_index = __commonJS({
         void onDelete(todo.id, todo.name);
       });
       list.appendChild(fragment);
-      if (isEditing) {
+      if (editState.type === "editing" && editState.id === todo.id) {
         editInput.focus();
         editInput.select();
       }
@@ -243,20 +252,26 @@ var require_index = __commonJS({
       const handleDelete = async (id, name) => {
         const ok = await confirm(confirmDialog, confirmMessage, `\u300C${name}\u300D\u3092\u524A\u9664\u3057\u307E\u3059\u304B\uFF1F`);
         if (!ok) return;
-        if (editingId === id) {
-          editingId = null;
+        if (editState.type === "editing" && editState.id === id) {
+          editState = idleEditState();
         }
         todos = todos.filter((todo) => todo.id !== id);
         refresh();
       };
       const handleStartEdit = (id) => {
-        editingId = id;
+        const todo = todos.find((t) => t.id === id);
+        if (!todo) return;
+        editState = startEditing(todo.id, todo.name);
         refresh();
       };
-      const handleSaveEdit = (id, name) => {
+      const handleSaveEdit = (name) => {
+        if (editState.type !== "editing") return;
+        const {
+          id
+        } = editState;
         const nextName = name.trim();
         if (!nextName) {
-          editingId = null;
+          editState = idleEditState();
           refresh();
           return;
         }
@@ -264,11 +279,11 @@ var require_index = __commonJS({
           ...todo,
           name: nextName
         } : todo);
-        editingId = null;
+        editState = idleEditState();
         refresh();
       };
       const handleCancelEdit = () => {
-        editingId = null;
+        editState = idleEditState();
         refresh();
       };
       const handleAdd = (e) => {
@@ -285,7 +300,7 @@ var require_index = __commonJS({
         if (!todos.length) return;
         const ok = await confirm(confirmDialog, confirmMessage, "\u3059\u3079\u3066\u306E todo \u3092\u524A\u9664\u3057\u307E\u3059\u304B\uFF1F");
         if (!ok) return;
-        editingId = null;
+        editState = idleEditState();
         todos = [];
         refresh();
         input.value = "";
