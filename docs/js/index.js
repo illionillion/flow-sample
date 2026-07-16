@@ -314,7 +314,7 @@ var require_index = __commonJS({
       list.replaceChildren();
       todos.forEach((todo) => appendTodoItem(list, template, todo, onToggle, onDelete, onStartEdit, onSaveEdit, onCancelEdit));
     };
-    window.addEventListener("load", () => {
+    var main = () => {
       const app = document.getElementById("app");
       const input = document.getElementById("input");
       const list = document.getElementById("list");
@@ -405,7 +405,8 @@ var require_index = __commonJS({
       app.addEventListener("submit", handleAdd);
       clear.addEventListener("click", handleClear);
       refresh();
-    });
+    };
+    window.addEventListener("load", main);
   }
 });
 export default require_index();
