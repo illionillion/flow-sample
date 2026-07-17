@@ -271,7 +271,14 @@ var require_index = __commonJS({
     var initial = loadTodos();
     var todos = initial.ok ? initial.value : [];
     var editState = idleEditState();
-    var appendTodoItem = (list, template, todo, onToggle, onDelete, onStartEdit, onSaveEdit, onCancelEdit) => {
+    var appendTodoItem = (list, template, todo, handlers) => {
+      const {
+        onToggle,
+        onDelete,
+        onStartEdit,
+        onSaveEdit,
+        onCancelEdit
+      } = handlers;
       const fragment = template.content.cloneNode(true);
       if (!(fragment instanceof DocumentFragment)) return;
       const item = fragment.querySelector("[data-todo-item]");
@@ -338,11 +345,11 @@ var require_index = __commonJS({
         editInput.select();
       }
     };
-    var renderList = (list, count, template, onToggle, onDelete, onStartEdit, onSaveEdit, onCancelEdit) => {
+    var renderList = (list, count, template, handlers) => {
       const done = todos.filter((todo) => todo.checked).length;
       count.textContent = `${todos.length} \u4EF6\uFF08\u5B8C\u4E86 ${done}\uFF09`;
       list.replaceChildren();
-      todos.forEach((todo) => appendTodoItem(list, template, todo, onToggle, onDelete, onStartEdit, onSaveEdit, onCancelEdit));
+      todos.forEach((todo) => appendTodoItem(list, template, todo, handlers));
     };
     var main = () => {
       const app = document.getElementById("app");
@@ -366,7 +373,13 @@ var require_index = __commonJS({
       };
       const refresh = () => {
         persist();
-        renderList(list, count, template, handleToggle, handleDelete, handleStartEdit, handleSaveEdit, handleCancelEdit);
+        renderList(list, count, template, {
+          onToggle: handleToggle,
+          onDelete: handleDelete,
+          onStartEdit: handleStartEdit,
+          onSaveEdit: handleSaveEdit,
+          onCancelEdit: handleCancelEdit
+        });
       };
       const handleToggle = (id, checked) => {
         todos = todos.map((todo) => todo.id === id ? updateTodo(todo, {
