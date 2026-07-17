@@ -6,6 +6,14 @@ import { loadTodos, saveTodos } from './storage.js';
 import { createTodo, findTodo, idleEditState, startEditing, updateTodo } from './types.js';
 import type { EditState, Todo, TodoId } from './types.js';
 
+type TodoHandlers = {
+  onToggle: (id: TodoId, checked: boolean) => void,
+  onDelete: (id: TodoId, name: string) => void | Promise<void>,
+  onStartEdit: (id: TodoId) => void,
+  onSaveEdit: (name: string) => void,
+  onCancelEdit: () => void,
+};
+
 const initial = loadTodos();
 let todos: Array<Todo> = initial.ok ? initial.value : [];
 let editState: EditState = idleEditState();
@@ -14,12 +22,9 @@ const appendTodoItem = (
   list: HTMLUListElement,
   template: HTMLTemplateElement,
   todo: Todo,
-  onToggle: (id: TodoId, checked: boolean) => void,
-  onDelete: (id: TodoId, name: string) => void | Promise<void>,
-  onStartEdit: (id: TodoId) => void,
-  onSaveEdit: (name: string) => void,
-  onCancelEdit: () => void,
+  handlers: TodoHandlers,
 ) => {
+  const { onToggle, onDelete, onStartEdit, onSaveEdit, onCancelEdit } = handlers;
   const fragment = template.content.cloneNode(true);
   if (!(fragment instanceof DocumentFragment)) return;
 
@@ -104,18 +109,12 @@ const renderList = (
   list: HTMLUListElement,
   count: HTMLElement,
   template: HTMLTemplateElement,
-  onToggle: (id: TodoId, checked: boolean) => void,
-  onDelete: (id: TodoId, name: string) => void | Promise<void>,
-  onStartEdit: (id: TodoId) => void,
-  onSaveEdit: (name: string) => void,
-  onCancelEdit: () => void,
+  handlers: TodoHandlers,
 ) => {
   const done = todos.filter((todo) => todo.checked).length;
   count.textContent = `${todos.length} 件（完了 ${done}）`;
   list.replaceChildren();
-  todos.forEach((todo) =>
-    appendTodoItem(list, template, todo, onToggle, onDelete, onStartEdit, onSaveEdit, onCancelEdit),
-  );
+  todos.forEach((todo) => appendTodoItem(list, template, todo, handlers));
 };
 
 const main = () => {
@@ -143,16 +142,13 @@ const main = () => {
 
   const refresh = () => {
     persist();
-    renderList(
-      list,
-      count,
-      template,
-      handleToggle,
-      handleDelete,
-      handleStartEdit,
-      handleSaveEdit,
-      handleCancelEdit,
-    );
+    renderList(list, count, template, {
+      onToggle: handleToggle,
+      onDelete: handleDelete,
+      onStartEdit: handleStartEdit,
+      onSaveEdit: handleSaveEdit,
+      onCancelEdit: handleCancelEdit,
+    });
   };
 
   const handleToggle = (id: TodoId, checked: boolean) => {
